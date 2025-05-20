@@ -73,6 +73,7 @@ export interface Photosphere {
   backgroundAudio?: Asset;
   timeline: Record<string, string>;
   parentPS?: string;
+  color?: string;
 }
 
 // Hotspot2D: a clickable resource that is inside a 2D image (x, y)
@@ -94,6 +95,7 @@ export interface Hotspot3D {
   level: number;
   icon: Asset;
   data: HotspotData;
+  color?: string;
 }
 
 // HotspotData: types of media resources for a hotspot within a photosphere

@@ -1,4 +1,4 @@
-import { forwardRef, useState } from "react";
+import { forwardRef, useState} from "react";
 import { HexColorPicker } from "react-colorful";
 import "react-h5-audio-player/lib/styles.css";
 
@@ -43,7 +43,8 @@ import {
   photosphereLinkTooltip,
 } from "./PageUtility/DataStructures";
 import { LinkArrowIcon } from "../UI/LinkArrowIcon";
-import { HotspotDataEditor, HotspotIconEditor } from "../buttons/AddHotspot";
+import { HotspotDataEditor} from "../buttons/AddHotspot";
+import { MuiFileInput } from "mui-file-input";
 
 export interface HotspotIconProps {
   hotspotData: HotspotData;
@@ -361,6 +362,7 @@ export interface HotspotEditorProps {
     newTooltip: string,
     newData: HotspotData,
     newIcon?: Asset,
+    newColor?: string,
   ) => void;
   openNestedHotspot: (toOpen: Hotspot2D) => void;
   photosphereOptions: string[];
@@ -382,6 +384,9 @@ function HotspotEditor({
   openNestedHotspot,
   photosphereOptions,
 }: HotspotEditorProps) {
+  const [isCustomIcon] = useState(false);
+  const [customIconFile, setCustomIconFile] = useState<File | null>(null);
+  const [color] = useState("#1976d2");
   const [hotspotsCollapsed, setHotspotsCollapsed] = useState(false);
 
   const [colorAnchor, setColorAnchor] = useState<HTMLElement | null>(null);
@@ -453,15 +458,26 @@ function HotspotEditor({
         photosphereOptions={photosphereOptions}
       />
 
-      {setPreviewIcon && (
-        <HotspotIconEditor
-          iconAsset={previewIcon}
-          setIconAsset={(icon) => {
-            setPreviewIcon(icon);
+    {isCustomIcon && (
+      <MuiFileInput
+        label="Upload Custom Icon*"
+        value={customIconFile}
+        onChange={(file) => {
+          setCustomIconFile(file);
+          if (file) {
+            setPreviewIcon?.({
+              tag: "Runtime",
+              id: newID(),
+              path: URL.createObjectURL(file),
+            });
             setEdited(true);
-          }}
-        />
-      )}
+          }
+        }}
+        inputProps={{ accept: "image/*" }}
+        fullWidth
+      />
+    )}
+
 
       {previewData?.tag === "Image" && (
         <>
@@ -579,10 +595,13 @@ function HotspotEditor({
           sx={{ width: "50%" }}
           onClick={() => {
             if (previewData !== null) {
+              const shouldHaveColor = !isCustomIcon && previewIcon?.path !== "/pin-blue.png" && previewIcon?.path !== "/pin-red.png";
+
               updateHotspot(
                 previewTooltip,
                 previewData,
                 previewIcon ?? undefined,
+                shouldHaveColor ? color : undefined
               );
             }
           }}

@@ -17,3 +17,17 @@ body {
 .react-colorful__hue {
   border-radius: 0 0 4px 4px !important;
 }
+
+.hotspot-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease, filter 0.2s ease;
+  filter: brightness(0.9);
+}
+
+.hotspot-icon:hover {
+  transform: scale(1.15);
+  filter: brightness(1.5) drop-shadow(0 0 6px #1976d2);
+  cursor: pointer;
+}
