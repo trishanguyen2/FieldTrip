@@ -1,3 +1,4 @@
+import dayjs, { Dayjs } from "dayjs";
 import { MuiFileInput } from "mui-file-input";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -69,7 +70,7 @@ function PhotosphereEditor({
   const [showRemoveFeatures, setShowRemoveFeatures] = useState(false);
 
   const [gamifiedState, SwapGamifyState] = useGamificationState(isGamified);
-  
+
   const visitedState = JSON.parse(
     localStorage.getItem("visitedState") ?? "{}",
   ) as VisitedState;
@@ -79,6 +80,8 @@ function PhotosphereEditor({
 
   const [showRemovePhotosphere, setShowRemovePhotosphere] = useState(false);
   const [showEditNavMap, setShowEditNavMap] = useState(false);
+
+  const [showAddTimestep, setShowAddTimestep] = useState(false);
 
   // Filter hotspots to find used photospheres
   const usedPhotospheres = Object.values(existingHotspots)
@@ -216,6 +219,38 @@ function PhotosphereEditor({
     setUpdateTrigger((prev) => prev + 1);
   }
 
+  function handleAddTimestep(newPhotosphere: Photosphere, date?: Dayjs) {
+    if (!date) console.error("No date provided for the timestep");
+    // add the timestep to the parent if one exists to not have nesting timstamps
+    const parentPS = vfe.photospheres[currentPS].parentPS
+      ? vfe.photospheres[currentPS].parentPS
+      : currentPS;
+    newPhotosphere.parentPS = parentPS;
+    const updatedVFE: VFE = {
+      ...vfe,
+
+      photospheres: {
+        ...vfe.photospheres,
+
+        [newPhotosphere.id]: newPhotosphere,
+      },
+    };
+
+    updatedVFE.photospheres[parentPS].timeline = {
+      ...updatedVFE.photospheres[parentPS].timeline,
+
+      [date ? date.format("YYYY-DD-MM") : dayjs().format("YYYY-DD-MM")]:
+        newPhotosphere.id,
+    };
+
+    console.log(updatedVFE.photospheres[currentPS]);
+
+    onUpdateVFE(updatedVFE);
+    onChangePS(newPhotosphere.id);
+    setShowAddTimestep(false);
+    setUpdateTrigger((prev) => prev + 1);
+  }
+
   function handleCreateNavMap(updatedNavMap: NavMap) {
     const updatedVFE: VFE = {
       ...vfe,
@@ -245,6 +280,7 @@ function PhotosphereEditor({
   // Reset all states so we dont have issues with handling different components at the same time
   function resetStates() {
     setShowAddPhotosphere(false);
+    setShowAddTimestep(false);
     setShowAddNavMap(false);
     setShowAddHotspot(false);
     setShowChangePhotosphere(false);
@@ -286,20 +322,20 @@ function PhotosphereEditor({
           photosphereOptions={availablePhotosphereOptions}
         />
       );
-      if (showChangePhotosphere) {
-        return (
-          <ChangePhotosphere
-            ps={vfe.photospheres[currentPS]}
-            onCancel={resetStates}
-            onChangePhotosphere={handleChangePhotosphere}
-            defaultPhotosphereID={vfe.defaultPhotosphereID}
-            onChangeDefault={(newID) => {
-              onUpdateVFE({ ...vfe, defaultPhotosphereID: newID });
-            }}
-          />
-        );
-      }
-      
+    if (showChangePhotosphere) {
+      return (
+        <ChangePhotosphere
+          ps={vfe.photospheres[currentPS]}
+          onCancel={resetStates}
+          onChangePhotosphere={handleChangePhotosphere}
+          defaultPhotosphereID={vfe.defaultPhotosphereID}
+          onChangeDefault={(newID) => {
+            onUpdateVFE({ ...vfe, defaultPhotosphereID: newID });
+          }}
+        />
+      );
+    }
+
     if (showRemovePhotosphere)
       return (
         <RemovePhotosphere
@@ -308,6 +344,15 @@ function PhotosphereEditor({
           }}
           onClose={handleCloseRemovePhotosphere}
           vfe={vfe}
+        />
+      );
+    if (showAddTimestep)
+      return (
+        <AddPhotosphere
+          vfe={vfe}
+          onAddPhotosphere={handleAddTimestep}
+          onCancel={resetStates}
+          isTimestep={true}
         />
       );
     return null;
@@ -551,7 +596,6 @@ function PhotosphereEditor({
             >
               Add New Photosphere
             </Button>
-
             <Button
               sx={{ margin: "10px 0" }}
               onClick={() => {
@@ -574,6 +618,17 @@ function PhotosphereEditor({
             >
               Add New Hotspot
             </Button>
+            <Button
+              sx={{ margin: "10px 0" }}
+              onClick={() => {
+                resetStates();
+
+                setShowAddTimestep(true);
+              }}
+              variant="contained"
+            >
+              Add Time Step
+            </Button>
             <MuiFileInput
               placeholder="Upload Background Audio"
               value={audioFile}
@@ -584,6 +639,7 @@ function PhotosphereEditor({
               }}
               sx={{ width: "275px", margin: "5px 0" }}
             />
+
             <Button
               sx={{ margin: "10px 0" }}
               onClick={() => {

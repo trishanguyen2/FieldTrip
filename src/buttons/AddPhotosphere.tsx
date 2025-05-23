@@ -1,3 +1,4 @@
+import dayjs, { Dayjs } from "dayjs";
 import { MuiFileInput } from "mui-file-input";
 import { useState } from "react";
 
@@ -11,6 +12,8 @@ import {
   Stack,
   TextField,
 } from "@mui/material";
+import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 
 import {
   Photosphere,
@@ -21,15 +24,17 @@ import PhotosphereLocationSelector from "../PhotosphereFeatures/PhotosphereLocat
 import { alertMUI } from "../UI/StyledDialogWrapper.tsx";
 
 interface AddPhotosphereProps {
-  onAddPhotosphere: (newPhotosphere: Photosphere) => void;
+  onAddPhotosphere: (newPhotosphere: Photosphere, date?: Dayjs) => void;
   onCancel: () => void;
   vfe: VFE;
+  isTimestep?: boolean;
 }
 
 function AddPhotosphere({
   onAddPhotosphere,
   onCancel,
   vfe,
+  isTimestep,
 }: AddPhotosphereProps): JSX.Element {
   const [photosphereID, setPhotosphereID] = useState("");
   const [panoImage, setPanoImage] = useState("");
@@ -41,6 +46,7 @@ function AddPhotosphere({
     x: number;
     y: number;
   } | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Dayjs | null>(dayjs());
 
   const map = vfe.map;
 
@@ -74,8 +80,11 @@ function AddPhotosphere({
         : undefined,
       timeline: {},
     };
-
-    onAddPhotosphere(newPhotosphere);
+    if (isTimestep) {
+      onAddPhotosphere(newPhotosphere, selectedDate ? selectedDate : undefined);
+    } else {
+      onAddPhotosphere(newPhotosphere);
+    }
 
     setPhotosphereID("");
     setPanoImage("");
@@ -114,7 +123,15 @@ function AddPhotosphere({
               startAdornment: <AttachFileIcon />,
             }}
           />
-          {map && (
+          {isTimestep && (
+            <LocalizationProvider dateAdapter={AdapterDayjs}>
+              <DatePicker
+                value={selectedDate}
+                onChange={(newDate) => setSelectedDate(newDate)}
+              />
+            </LocalizationProvider>
+          )}
+          {!isTimestep && map && (
             <Button
               variant="outlined"
               onClick={() => {

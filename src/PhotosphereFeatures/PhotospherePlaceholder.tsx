@@ -19,6 +19,7 @@ import { Box, alpha } from "@mui/material";
 import { common } from "@mui/material/colors";
 
 import { useVisitedState } from "../Hooks/HandleVisit";
+import { useTimelineSelectedContext } from "../Hooks/TimelineSelected";
 import { useVFELoaderContext } from "../Hooks/VFELoaderContext";
 import {
   Hotspot2D,
@@ -166,6 +167,9 @@ function PhotospherePlaceholder({
 
   const lockViewsRef = useRef(lockViews);
 
+  const { wasTimelineSelected: _, setWasTimelineSelected } =
+    useTimelineSelectedContext();
+
   useEffect(() => {
     lockViewsRef.current = lockViews;
   }, [lockViews]);
@@ -180,8 +184,7 @@ function PhotospherePlaceholder({
     return acc;
   }, {});
 
-  const [visited, handleVisit] = useVisitedState(initialPhotosphereHotspots);
-  console.log("in viewer", visited);
+  const [__, handleVisit] = useVisitedState(initialPhotosphereHotspots);
 
   const isViewerMode = onUpdateHotspot === undefined;
 
@@ -252,7 +255,6 @@ function PhotospherePlaceholder({
     });
 
     instance.addEventListener("position-updated", ({ position }) => {
-      console.log(lockViewsRef.current);
       if (!lockViewsRef.current) return;
       const [otherRef] = states.references.filter((ref) => {
         if (ref != photosphereRef) return ref;
@@ -281,10 +283,12 @@ function PhotospherePlaceholder({
     virtualTour.setNodes(nodes, currentPS);
     virtualTour.addEventListener("node-changed", ({ node }) => {
       if (!vfe.photospheres[node.id].parentPS) {
-        // want to travel both viewers only if we traveled to a parent node
         states.setStates.forEach((setStateFunc) =>
           setStateFunc(vfe.photospheres[node.id]),
         );
+      } else {
+        // just reset it and don't update all nodes
+        setWasTimelineSelected(false);
       }
       onChangePS(node.id);
 
