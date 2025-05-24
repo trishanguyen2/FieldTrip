@@ -287,16 +287,25 @@ function PhotospherePlaceholder({
         );
       }
       onChangePS(node.id);
-
+      console.log("BACK HERE", Number(sessionStorage.getItem("lastEditedHotspotFlag")), Number(sessionStorage.getItem("lastEditedHotspotFlag")) == 1);
       // clear popovers on scene change
       // Upon saving a hotspot, the scene will refresh and automatically load back into what ever hotspot was saved last
-      if (Number(sessionStorage.getItem("lastEditedHotspotFlag")) == 1) { 
-        setHotspotArray( 
-          JSON.parse(sessionStorage.getItem("listEditedHotspot") || "[]") 
-        ); 
+      if (Number(sessionStorage.getItem("lastEditedHotspotFlag")) == 1) {
+        if (JSON.parse(sessionStorage.getItem("listEditedHotspot") || "[]").length > 0) {
+          let hotspotItem: (Hotspot2D | Hotspot3D) = vfe.photospheres[currentPS].hotspots[ JSON.parse(sessionStorage.getItem("listEditedHotspot") || "[]")[0] ];
+          let hotspotList: (Hotspot2D | Hotspot3D)[] = [ hotspotItem ];
+
+          for (let i = 1; i < JSON.parse(sessionStorage.getItem("listEditedHotspot") || "[]").length; ++i) {
+            if ('hotspots' in hotspotItem.data) {
+                hotspotItem = hotspotItem.data.hotspots[ JSON.parse(sessionStorage.getItem("listEditedHotspot") || "[]")[i] ];
+              hotspotList.push(hotspotItem);
+            }
+          }
+          setHotspotArray(hotspotList);
+        }
       }
-      else { 
-        setHotspotArray([]); 
+      else {
+        setHotspotArray([]);
       }
 
       sessionStorage.setItem("listEditedHotspot", "[]"); // Clear the last hotspot so it doesn't keep loading into the same hotspot

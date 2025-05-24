@@ -17,7 +17,6 @@ import ChangePhotosphere from "../buttons/ChangePhotosphere.tsx";
 import EditNavMap from "../buttons/EditNavMap.tsx";
 import RemovePhotosphere from "../buttons/RemovePhotosphere.tsx";
 import {
-  Hotspot2D,
   Hotspot3D,
   NavMap,
   Photosphere,
@@ -131,18 +130,7 @@ function PhotosphereEditor({
       },
     };
 
-    let hotspotList: (Hotspot2D | Hotspot3D)[] = [ vfe.photospheres[currentPS].hotspots[hotspotPath[0]] ];
-    if (hotspotPath.length > 1) {
-      let hotspotItem: (Hotspot2D | Hotspot3D) = vfe.photospheres[currentPS].hotspots[hotspotPath[0]];
-
-      for (let i = 1; i < hotspotPath.length; ++i) {
-        if ('hotspots' in hotspotItem.data) {
-          hotspotItem = hotspotItem.data.hotspots[hotspotPath[i]];
-          hotspotList.push(hotspotItem);
-        }
-      }
-    }
-    sessionStorage.setItem("listEditedHotspot", JSON.stringify(hotspotList));
+    sessionStorage.setItem("listEditedHotspot", JSON.stringify(hotspotPath));
 
     onUpdateVFE(updatedVFE);
     setUpdateTrigger((prev) => prev + 1);
